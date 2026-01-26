@@ -1,7 +1,9 @@
 /**
- * EMBY-PROXY-UI V9.3 (CN Terminology Update)
- * 术语修正：节点->代理，回源->服务器
- * 核心特性：真实IP穿透、北京时间、思源黑体 UI
+ * EMBY-PROXY-UI V9.4 (Emby Icon Edition)
+ * 核心特性：真实IP穿透、北京时间、思源黑体 UI、Emby 品牌化图标
+ * * 部署说明：
+ * 1. 在 Cloudflare Workers 设置中绑定 KV 命名空间，变量名必须为: ENI_KV
+ * 2. 在 环境变量 中设置 ADMIN_PASS (后台管理路径，例如 "manage")
  */
 
 const STATIC_REGEX = /\.(?:jpg|jpeg|gif|png|svg|ico|webp|js|css|woff2?|ttf|otf|map|webmanifest|json)$/i;
@@ -169,6 +171,9 @@ function renderAdminUI(env) {
   const theme = (hour >= 6 && hour < 18) ? "lofi" : "black"; 
   const isDark = theme === "black";
 
+  // Emby Brand Color
+  const embyGreen = "#52B54B";
+
   return new Response(`
 <!DOCTYPE html>
 <html data-theme="${theme}">
@@ -199,8 +204,8 @@ function renderAdminUI(env) {
         
         .status-dot {
             width: 6px; height: 6px; border-radius: 50%;
-            background-color: #00d26a;
-            box-shadow: 0 0 12px #00d26a;
+            background-color: ${embyGreen};
+            box-shadow: 0 0 12px ${embyGreen};
             animation: pulse 3s infinite ease-in-out;
         }
         @keyframes pulse { 0% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } 100% { opacity: 0.3; transform: scale(0.8); } }
@@ -218,8 +223,10 @@ function renderAdminUI(env) {
         
         <header class="navbar glass-panel rounded-2xl px-8 py-5 flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#52B54B] to-[#3e8d38] flex items-center justify-center text-white shadow-lg shadow-emerald-900/20">
+                    <svg viewBox="0 0 100 100" class="h-7 w-7 fill-current ml-1">
+                        <path d="M84.3,44.4L24.7,4.8c-4.4-2.9-10.3,0.2-10.3,5.6v79.2c0,5.3,5.9,8.5,10.3,5.6l59.7-39.6C88.4,53.1,88.4,47.1,84.3,44.4z" />
+                    </svg>
                 </div>
                 <div>
                     <h1 class="text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-800'}">EMBY-PROXY-UI</h1>
@@ -246,17 +253,17 @@ function renderAdminUI(env) {
                         
                         <div class="form-control w-full space-y-1">
                             <label class="label p-0 mb-1"><span class="label-text text-xs font-bold opacity-70">代理名称 (英文)</span></label>
-                            <input id="inName" type="text" placeholder="例如: HK-Emby" class="input input-bordered input-sm w-full bg-base-100/50 focus:border-emerald-500 font-medium" />
+                            <input id="inName" type="text" placeholder="例如: HK-Emby" class="input input-bordered input-sm w-full bg-base-100/50 focus:border-[${embyGreen}] font-medium" />
                         </div>
                         
                         <div class="form-control w-full space-y-1">
                             <label class="label p-0 mb-1"><span class="label-text text-xs font-bold opacity-70">访问密钥 (可选)</span></label>
-                            <input id="inPath" type="password" placeholder="留空则公开访问" class="input input-bordered input-sm w-full bg-base-100/50 focus:border-emerald-500 font-medium" />
+                            <input id="inPath" type="password" placeholder="留空则公开访问" class="input input-bordered input-sm w-full bg-base-100/50 focus:border-[${embyGreen}] font-medium" />
                         </div>
                         
                         <div class="form-control w-full space-y-1">
                             <label class="label p-0 mb-1"><span class="label-text text-xs font-bold opacity-70">服务器地址 (Target)</span></label>
-                            <input id="inTarget" type="text" placeholder="http://1.2.3.4:8096" class="input input-bordered input-sm w-full bg-base-100/50 focus:border-emerald-500 font-mono text-xs" />
+                            <input id="inTarget" type="text" placeholder="http://1.2.3.4:8096" class="input input-bordered input-sm w-full bg-base-100/50 focus:border-[${embyGreen}] font-mono text-xs" />
                         </div>
 
                         <button onclick="saveNode()" class="btn btn-neutral w-full mt-4 bg-gradient-to-r from-slate-800 to-slate-900 text-white border-0 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
@@ -271,7 +278,7 @@ function renderAdminUI(env) {
                 <div class="card glass-panel shadow-xl overflow-hidden min-h-[280px]">
                     <div class="px-6 py-4 border-b border-base-content/5 flex justify-between items-center bg-base-content/5">
                         <h2 class="text-sm font-bold opacity-70">活跃代理列表</h2>
-                        <div id="nodes-label" class="badge badge-success gap-1 badge-sm text-white border-0">
+                        <div id="nodes-label" class="badge badge-success gap-1 badge-sm text-white border-0" style="background-color: ${embyGreen}">
                             <span class="animate-pulse w-1.5 h-1.5 rounded-full bg-white"></span> 连接中
                         </div>
                     </div>
@@ -323,13 +330,13 @@ function renderAdminUI(env) {
                         <tr class="hover:bg-base-content/5 transition-colors border-b border-base-content/5 last:border-0 group">
                             <td class="pl-6 py-3">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-2 h-2 rounded-full \${isSecured ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]' : 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]'}"></div>
+                                    <div class="w-2 h-2 rounded-full \${isSecured ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]' : 'bg-[#52B54B] shadow-[0_0_8px_rgba(82,181,75,0.5)]'}"></div>
                                     <span class="font-bold tracking-wide">\${n.name}</span>
                                     \${isSecured ? '<span class="px-1.5 py-0.5 rounded text-[9px] bg-amber-500/10 text-amber-500 font-bold border border-amber-500/20">密</span>' : ''}
                                 </div>
                             </td>
                             <td>
-                                <button onclick="copy('\${fullLink}')" class="text-left font-mono text-xs opacity-60 hover:opacity-100 hover:text-emerald-500 transition-colors select-all truncate max-w-[200px] md:max-w-xs bg-base-content/5 px-2 py-1 rounded">
+                                <button onclick="copy('\${fullLink}')" class="text-left font-mono text-xs opacity-60 hover:opacity-100 hover:text-[#52B54B] transition-colors select-all truncate max-w-[200px] md:max-w-xs bg-base-content/5 px-2 py-1 rounded">
                                     \${fullLink}
                                 </button>
                             </td>
