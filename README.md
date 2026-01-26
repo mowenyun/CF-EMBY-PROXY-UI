@@ -1,6 +1,6 @@
 # 🎥 EMBY-PROXY-PRO (Cloudflare Worker Edition)
 
-> **版本**: V11.4 Final Polish
+> **版本**: V11.5 Final Polish
 > 一个基于 Cloudflare Workers 的高性能、高安全性的 Emby/Jellyfin 反向代理网关。
 > 专为家庭媒体服务器设计，提供真实 IP 穿透、极致流媒体优化、Web 管理后台及防暴力破解安全机制。
 <img width="2560" height="1600" alt="图片" src="https://github.com/user-attachments/assets/b962ed15-192d-443d-8fc5-b9cce3ca360c" />
