@@ -40,15 +40,15 @@ cf-emby-proxy-ui它是一个反代EMBY实现加速以及EMBY源站IP隐藏的项
 
 ## **部署前提**
 
-**腐竹让不让反代** 询问腐竹让不让反代？
+**腐竹让不让反代**， 询问腐竹让不让反代？
 
-**客户端支不支持反代** 客户端可以选择小幻,hills,vidhub,senplayer,forward,afusekt,yamby 【我测试的hills没有问题】
+**客户端支不支持反代** ，客户端可以选择小幻,hills,vidhub,senplayer,forward,afusekt,yamby 【我测试的hills没有问题】
 
-**滥用的话cloudflare可能会暂停账号功能或是封号。** ，项目已设置 `Cache-Control: no-store` 并禁用了 Cloudflare 对流媒体文件的缓存，符合 Cloudflare 服务条款中关于“非 HTML 内容缓存”的规定。 但请注意：如果您的日均流量过大（如 TB 级别），仍可能因占用过多带宽被 Cloudflare 判定为滥用（Section 2.8）。**建议仅用于个人或家庭分享**。
+**滥用的话cloudflare可能会暂停账号功能或是封号** ，项目已设置 `Cache-Control: no-store` 并禁用了 Cloudflare 对流媒体文件的缓存，符合 Cloudflare 服务条款中关于“非 HTML 内容缓存”的规定。 但请注意：如果您的日均流量过大（如 TB 级别），仍可能因占用过多带宽被 Cloudflare 判定为滥用（Section 2.8）。**建议仅用于个人或家庭分享**。
 
 **EMBY源站自定义WEB端路径**，代码太死板无法自动匹配路径。只会匹配/web/index.html
 
-**看视频造成的Worker请求数量偏高，**考虑是否影响其他worker
+**看视频造成的Worker请求数量偏高**，考虑是否影响其他worker
 
 ---
 
@@ -189,7 +189,7 @@ cf-emby-proxy-ui它是一个反代EMBY实现加速以及EMBY源站IP隐藏的项
 
 **CF 与 EMBY源站的对等连接**：Cloudflare 美国/香港节点连接你 Emby 源站服务器（例如在新加坡或美西）的线路质量。【可以通过CNAME+路由的方式来加速】
 
-**EMBY源站上行带宽 **无解 
+**EMBY源站上行带宽** 无解 
 
 **转码能力**：如果触发转码，取决于服务器 CPU/GPU 性能。
 
