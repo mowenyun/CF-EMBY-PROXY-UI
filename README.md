@@ -1,8 +1,8 @@
-# CF-EMBY-PROXY-UI 最新版本：V16.0
+# CF-EMBY-PROXY-UI 最新版本：V16.1
 
 ## 描述
 
-cf-emby-proxy-ui它是一个反代EMBY实现加速以及EMBY源站IP隐藏的项目。鉴权使用的是管理员密码+JWT密钥的组合，不手动设置JWT密钥，JWT密钥会退回到与管理员密钥相同。有面板可以设置多个反代，同时也提供了代理数据的导入和导出。
+cf-emby-proxy-ui它是一个反代EMBY实现加速以及EMBY源站IP隐藏的项目。鉴权使用的是管理员密码+JWT密钥的组合，不手动设置JWT密钥，JWT密钥会退回到与管理员密码相同。有面板可以设置多个反代，同时也提供了代理数据的导入和导出。
 
 ---
 
@@ -66,15 +66,16 @@ cf-emby-proxy-ui它是一个反代EMBY实现加速以及EMBY源站IP隐藏的项
 
 ---边缘证书  
 
-- **始终使用 HTTPS**  
-- **最低 TLS 版本 **选择TLS1.2 
-- **随机加密 TLS 1.3** 
-- **自动 HTTPS 重写**
+- **始终使用 HTTPS**  开启
+- **最低 TLS 版本**选择TLS1.2 
+- **随机加密**  开启
+- **TLS 1.3**  开启
+- **自动 HTTPS 重写**  开启
 
 #### 速度
 ---设置
 
-- 开启**站点推荐设置**
+- **站点推荐设置** 开启
 
 
 --- Smart Shield
@@ -85,17 +86,17 @@ cf-emby-proxy-ui它是一个反代EMBY实现加速以及EMBY源站IP隐藏的项
 
 ---配置
 
--  开启 浏览器缓存 TTL 【一天或很久】
+- 浏览器缓存 TTL 【一天或很久】
 
 
 ---Tiered Cache
 
-- 开启**Tiered Cache**
+- 开启**Tiered Cache** 开启
 
 
 ####  网络
 
-- 开启**WebSockets**
+- 开启**WebSockets** 开启
 
 
 ---
