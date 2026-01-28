@@ -48,8 +48,6 @@ cf-emby-proxy-ui它是一个反代EMBY实现加速以及EMBY源站IP隐藏的项
 
 **EMBY源站自定义WEB端路径**，代码太死板无法自动匹配路径。只会匹配/web/index.html
 
-**看视频造成的Worker请求数量偏高**，考虑是否影响其他worker
-
 ---
 
 ## 域名设置
