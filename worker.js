@@ -1,7 +1,7 @@
-// EMBY-PROXY-ULTIMATE V17.2 (BugFix)
-// [V17.2] 紧急修复: 前端 escapeHtml 报错
-// [V17.1] 修复: 列表空白 (增加KV读取容错)
-// [V17] 特性: 动态代理计算 | 旧数据兼容 | 极速缓存
+// EMBY-PROXY-ULTIMATE V17.2 (Stable)
+// [V17.2] 修复前端渲染报错 (escapeHtml缺失问题)
+// [V17.1] 修复列表空白 (KV变量名自动兼容)
+// 核心特性：单文件部署 | 动态代理计算 | 旧数据兼容 | 极速缓存
 
 // ============================================================================
 // 0. GLOBAL CONFIG & STATE
@@ -32,7 +32,7 @@ const Config = {
 // 1. AUTH MODULE
 // ============================================================================
 const Auth = {
-    // 辅助：获取 KV (兼容 ENI_KV 和其他常见命名)
+    // 智能获取 KV 绑定 (兼容多种命名)
     getKV(env) {
         return env.ENI_KV || env.KV || env.EMBY_KV || env.EMBY_PROXY;
     },
@@ -114,7 +114,7 @@ const Auth = {
 };
 
 // ============================================================================
-// 2. DATABASE MODULE (Enhanced Robustness)
+// 2. DATABASE MODULE
 // ============================================================================
 const Database = {
     PREFIX: "node:",
@@ -158,7 +158,7 @@ const Database = {
 
     async handleApi(request, env) {
         const kv = this.getKV(env);
-        if (!kv) return new Response(JSON.stringify({ error: "严重错误: 无法连接数据库(KV)。请检查Cloudflare后台变量绑定是否为 ENI_KV" }), { status: 500 });
+        if (!kv) return new Response(JSON.stringify({ error: "KV未绑定! 请检查变量名是否为 ENI_KV 或 KV" }), { status: 500 });
         
         const data = await request.json();
         const cache = caches.default;
@@ -179,11 +179,6 @@ const Database = {
             
             case "saveConfig":
                 if (data.config) {
-                    if (data.config.bgImage && data.config.bgImage.startsWith('data:')) {
-                        if (!data.config.bgImage.startsWith('data:image/')) {
-                            return new Response(JSON.stringify({ error: "Invalid File Type" }), { status: 400 });
-                        }
-                    }
                     await kv.put(this.CONFIG_KEY, JSON.stringify(data.config));
                     GLOBALS.ConfigCache = data.config;
                 }
@@ -230,14 +225,11 @@ const Database = {
                             let val = GLOBALS.NodeCache.get(name)?.data;
                             if (!val) val = await kv.get(key.name, { type: "json" });
                             return val ? { name, ...val } : null;
-                        } catch (e) {
-                            console.error(`Error reading key ${key.name}:`, e);
-                            return null;
-                        }
+                        } catch (e) { return null; }
                     }));
                     return new Response(JSON.stringify({ nodes: nodesList.filter(n => n) }));
                 } catch (e) {
-                    return new Response(JSON.stringify({ error: `读取列表失败: ${e.message}` }), { status: 500 });
+                    return new Response(JSON.stringify({ error: e.message }));
                 }
 
             default: return new Response("Invalid Action", { status: 400 });
