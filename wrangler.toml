@@ -1,3 +1,6 @@
+name = "emui"
+main = "_worker.js"
+compatibility_date = "2026-01-28"
 kv_namespaces = [
-  { binding = "MY_KV", id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" }
+  { binding = "ENI_KV", id = "e7814f6a703047dbb2c1adcf634cee2d" }
 ]
