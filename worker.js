@@ -1,6 +1,6 @@
-// CF-EMBY-PROXY-UI V16.6
-// [V16.6] UX Revolution: Real-time Preview, Background Overlay Mask, Text Shadow
-// [V16.5] Visual Upgrade: Glassmorphism (Blur), Text Contrast Mode
+// EMBY-PROXY-ULTIMATE V16.8
+// [V16.8] Personalization+: Accent Colors, Border Radius, Theme Presets
+// [V16.7] UI Refactor: Feature Toggles, Restore Defaults
 // 核心特性：L1 内存级缓存 | 零延迟 | 稳健 JWT | 极致资源优化 | 个性化主题 | 即时预览
 
 // ============================================================================
@@ -8,7 +8,7 @@
 // ============================================================================
 const GLOBALS = {
     NodeCache: new Map(),
-    ConfigCache: null,
+    ConfigCache: null, 
     Regex: {
         Static: /\.(?:jpg|jpeg|gif|png|svg|ico|webp|js|css|woff2?|ttf|otf|map|webmanifest|json)$/i,
         Streaming: /\.(?:mp4|m4v|m4s|m4a|ogv|webm|mkv|mov|avi|wmv|flv|ts|m3u8|mpd)$/i
@@ -161,7 +161,7 @@ const Database = {
                     GLOBALS.ConfigCache = config;
                 }
                 return new Response(JSON.stringify(config));
-
+            
             case "saveConfig":
                 if (data.config) {
                     if (data.config.bgImage && data.config.bgImage.startsWith('data:')) {
@@ -335,8 +335,8 @@ const Proxy = {
 const UI = {
     getHead(title) {
         const isLight = GLOBALS.isDaytimeCN();
-        // [V16.6] Refined CSS: Added Masking Layer support and improved slider styling
-        return `<!DOCTYPE html><html class="${isLight ? 'light' : ''}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>:root{--bg:#111;--p:rgba(34,34,34,var(--bg-op,1));--b:rgba(51,51,51,var(--bg-op,1));--t:#eee;--ts:#888;--a:#22c55e;--ah:#16a34a;--e:#ef4444;--blue:#3b82f6;--blur:0px;--mask:rgba(0,0,0,0);--shadow:none}html.light{--bg:#f5f5f5;--p:rgba(255,255,255,var(--bg-op,1));--b:rgba(224,224,224,var(--bg-op,1));--t:#333;--ts:#666;--a:#16a34a;--ah:#15803d}/* Text Theme Overrides */html.text-dark{--t:#111 !important;--ts:#444 !important}html.text-light{--t:#fff !important;--ts:#ccc !important}body{background:var(--bg);color:var(--t);font-family:system-ui,-apple-system,sans-serif;margin:0;display:flex;flex-direction:column;min-height:100vh;text-shadow:var(--shadow)}/* Background Overlay Mask */body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:var(--mask);pointer-events:none;z-index:-1}input,button,textarea{transition:all .3s}.panel{background:var(--p);border:1px solid var(--b);border-radius:8px;backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur))}.btn{cursor:pointer;border:none;border-radius:4px;font-weight:700}.btn-p{background:var(--a);color:#fff}.btn-p:hover{background:var(--ah)}.btn-icon{padding:5px;background:transparent;color:var(--ts)}.btn-icon:hover{color:var(--t)}.lang-btn{cursor:pointer;padding:5px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--t)}.lang-btn:hover{background:var(--b)}.gh-icon{color:var(--ts);transition:color .3s}.gh-icon:hover{color:var(--t)}.tag-badge{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:bold;margin-left:6px;display:inline-block}.tag-blue{background:rgba(59,130,246,0.2);color:var(--blue)}.tag-sec{background:rgba(239,68,68,0.2);color:var(--e)}.scroll-area{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin}.scroll-area::-webkit-scrollbar{width:6px}.scroll-area::-webkit-scrollbar-thumb{background:var(--b);border-radius:3px}input[type=checkbox]{accent-color:var(--a);cursor:pointer;width:16px;height:16px}tr.selected{background:rgba(34,197,94,0.1)}.settings-btn{position:fixed;bottom:20px;left:20px;background:var(--p);border:1px solid var(--b);color:var(--t);border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.2);z-index:100}.settings-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--p);border:1px solid var(--b);border-radius:8px;padding:20px;width:90%;max-width:400px;z-index:101;box-shadow:0 10px 30px rgba(0,0,0,0.5);display:none;max-height:85vh;overflow-y:auto}.settings-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:100;display:none}.s-group{margin-bottom:15px}.s-label{display:block;margin-bottom:5px;font-size:12px;color:var(--ts)}input[type=range]{-webkit-appearance:none;width:100%;background:transparent}input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:16px;width:16px;border-radius:50%;background:var(--a);cursor:pointer;margin-top:-6px;box-shadow:0 1px 3px rgba(0,0,0,0.3)}input[type=range]::-webkit-slider-runnable-track{width:100%;height:4px;cursor:pointer;background:var(--b);border-radius:2px}select{width:100%;padding:8px;background:rgba(255,255,255,0.1);border:1px solid var(--b);color:var(--t);border-radius:4px}hr{border:0;border-top:1px solid var(--b);margin:15px 0}</style></head>`;
+        // [V16.8] Added variables for accent color (--a) and radius (--radius)
+        return `<!DOCTYPE html><html class="${isLight ? 'light' : ''}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>:root{--bg:#111;--p:rgba(34,34,34,var(--bg-op,1));--b:rgba(51,51,51,var(--bg-op,1));--t:#eee;--ts:#888;--a:#22c55e;--ah:#16a34a;--e:#ef4444;--blue:#3b82f6;--blur:0px;--mask:rgba(0,0,0,0);--shadow:none;--radius:8px}html.light{--bg:#f5f5f5;--p:rgba(255,255,255,var(--bg-op,1));--b:rgba(224,224,224,var(--bg-op,1));--t:#333;--ts:#666;--a:#16a34a;--ah:#15803d}/* Text Theme Overrides */html.text-dark{--t:#111 !important;--ts:#444 !important}html.text-light{--t:#fff !important;--ts:#ccc !important}body{background:var(--bg);color:var(--t);font-family:system-ui,-apple-system,sans-serif;margin:0;display:flex;flex-direction:column;min-height:100vh;text-shadow:var(--shadow)}/* Background Overlay Mask */body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:var(--mask);pointer-events:none;z-index:-1}input,button,textarea,select{transition:all .3s}.panel{background:var(--p);border:1px solid var(--b);border-radius:var(--radius);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur))}.btn{cursor:pointer;border:none;border-radius:var(--radius);font-weight:700}.btn-p{background:var(--a);color:#fff}.btn-p:hover{filter:brightness(1.1)}.btn-icon{padding:5px;background:transparent;color:var(--ts)}.btn-icon:hover{color:var(--t)}.lang-btn{cursor:pointer;padding:5px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--t)}.lang-btn:hover{background:var(--b)}.gh-icon{color:var(--ts);transition:color .3s}.gh-icon:hover{color:var(--t)}.tag-badge{font-size:10px;padding:2px 6px;border-radius:var(--radius);font-weight:bold;margin-left:6px;display:inline-block}.tag-blue{background:rgba(59,130,246,0.2);color:var(--blue)}.tag-sec{background:rgba(239,68,68,0.2);color:var(--e)}.scroll-area{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin}.scroll-area::-webkit-scrollbar{width:6px}.scroll-area::-webkit-scrollbar-thumb{background:var(--b);border-radius:3px}input[type=checkbox]:not(.toggle-input){accent-color:var(--a);cursor:pointer;width:16px;height:16px}tr.selected{background:rgba(var(--a-rgb, 34,197,94), 0.1)}.settings-btn{position:fixed;bottom:20px;left:20px;background:var(--p);border:1px solid var(--b);color:var(--t);border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.2);z-index:100}.settings-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--p);border:1px solid var(--b);border-radius:var(--radius);padding:20px;width:90%;max-width:400px;z-index:101;box-shadow:0 10px 30px rgba(0,0,0,0.5);display:none;max-height:85vh;overflow-y:auto}.settings-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:100;display:none}.s-group{margin-bottom:15px}.s-label{display:block;margin-bottom:5px;font-size:12px;color:var(--ts)}input[type=range]{-webkit-appearance:none;width:100%;background:transparent}input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:16px;width:16px;border-radius:50%;background:var(--a);cursor:pointer;margin-top:-6px;box-shadow:0 1px 3px rgba(0,0,0,0.3)}input[type=range]::-webkit-slider-runnable-track{width:100%;height:4px;cursor:pointer;background:var(--b);border-radius:2px}select, input[type=text], input[type=password]{width:100%;padding:8px;background:rgba(255,255,255,0.05);border:1px solid var(--b);color:var(--t);border-radius:var(--radius)}hr{border:0;border-top:1px solid var(--b);margin:15px 0}.switch-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:5px 0}.switch{position:relative;display:inline-block;width:36px;height:20px}.switch input{opacity:0;width:0;height:0}.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:var(--b);transition:.4s;border-radius:20px}.slider:before{position:absolute;content:"";height:14px;width:14px;left:3px;bottom:3px;background-color:#fff;transition:.4s;border-radius:50%}input:checked+.slider{background-color:var(--a)}input:checked+.slider:before{transform:translateX(16px)}.s-section{display:none;padding:12px;background:rgba(0,0,0,0.03);border-radius:var(--radius);margin-bottom:15px;border:1px solid var(--b)}.s-section.active{display:block}.color-picker-wrapper{display:flex;align-items:center;gap:10px}input[type=color]{-webkit-appearance:none;border:none;width:30px;height:30px;padding:0;overflow:hidden;border-radius:50%;cursor:pointer;background:none}input[type=color]::-webkit-color-swatch-wrapper{padding:0}input[type=color]::-webkit-color-swatch{border:1px solid var(--b);border-radius:50%}</style></head>`;
     },
 
     escapeHtml(unsafe) {
@@ -352,7 +352,7 @@ const UI = {
     },
 
     renderLoginPage(error = "") {
-        return new Response(`${this.getHead("Login")}<body><div style="display:flex;justify-content:center;align-items:center;height:100vh"><div class="panel" style="padding:30px;width:300px"><h3>Emby Proxy Admin</h3><form method="POST"><input type="password" name="password" placeholder="Password" style="width:100%;padding:10px;margin-bottom:15px;box-sizing:border-box;background:var(--bg);border:1px solid var(--b);color:var(--t);border-radius:4px" required>${error ? `<div style="color:var(--e);font-size:12px;margin-bottom:10px;text-align:center">${this.escapeHtml(error)}</div>` : ''}<button class="btn btn-p" style="width:100%;padding:10px">登 录</button></form></div></div></body></html>`, { headers: { "Content-Type": "text/html" } });
+        return new Response(`${this.getHead("Login")}<body><div style="display:flex;justify-content:center;align-items:center;height:100vh"><div class="panel" style="padding:30px;width:300px"><h3>Emby Proxy Admin</h3><form method="POST"><input type="password" name="password" placeholder="Password" style="width:100%;padding:10px;margin-bottom:15px;box-sizing:border-box" required>${error ? `<div style="color:var(--e);font-size:12px;margin-bottom:10px;text-align:center">${this.escapeHtml(error)}</div>` : ''}<button class="btn btn-p" style="width:100%;padding:10px">登 录</button></form></div></div></body></html>`, { headers: { "Content-Type": "text/html" } });
     },
 
     renderLockedPage(ip) {
@@ -373,7 +373,7 @@ const UI = {
 ${this.getHead("Admin")}
 <body style="padding:20px;max-width:1100px;margin:0 auto;width:100%;box-sizing:border-box">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid var(--b)">
-        <h2 style="margin:0">Emby Proxy <span style="font-size:12px;color:var(--ts);font-weight:normal">V16.6</span></h2>
+        <h2 style="margin:0">Emby Proxy <span style="font-size:12px;color:var(--ts);font-weight:normal">V16.8</span></h2>
         <div style="display:flex;align-items:center;gap:15px">
              <div id="clk" style="font-family:monospace;font-size:12px;color:var(--ts)"></div>
              <div class="lang-btn" onclick="App.toggleLang()" title="Switch Language">
@@ -387,10 +387,10 @@ ${this.getHead("Admin")}
         
         <div class="panel" style="padding:20px;height:fit-content">
             <h3 style="margin-top:0" id="t-new">New Node</h3>
-            <input id="inName" placeholder="Name (e.g. HK)" style="width:100%;padding:8px;margin:5px 0 10px;background:var(--bg);border:1px solid var(--b);color:var(--t);border-radius:4px;box-sizing:border-box">
-            <input id="inTag" placeholder="Tag (e.g. VIP)" style="width:100%;padding:8px;margin:5px 0 10px;background:var(--bg);border:1px solid var(--b);color:var(--t);border-radius:4px;box-sizing:border-box">
-            <input id="inTarget" placeholder="Target (http://1.2.3.4:8096)" style="width:100%;padding:8px;margin:5px 0 10px;background:var(--bg);border:1px solid var(--b);color:var(--t);border-radius:4px;box-sizing:border-box">
-            <input id="inSec" placeholder="Secret Path (Optional)" style="width:100%;padding:8px;margin:5px 0 15px;background:var(--bg);border:1px solid var(--b);color:var(--t);border-radius:4px;box-sizing:border-box">
+            <input id="inName" placeholder="Name (e.g. HK)" style="margin-bottom:10px">
+            <input id="inTag" placeholder="Tag (e.g. VIP)" style="margin-bottom:10px">
+            <input id="inTarget" placeholder="Target (http://1.2.3.4:8096)" style="margin-bottom:10px">
+            <input id="inSec" placeholder="Secret Path (Optional)" style="margin-bottom:15px">
             <button class="btn btn-p" onclick="App.save()" style="width:100%;padding:8px" id="t-deploy">Deploy</button>
         </div>
 
@@ -436,58 +436,95 @@ ${this.getHead("Admin")}
     <div class="settings-btn" onclick="App.toggleSettings()">${icons.gear}</div>
     <div class="settings-overlay" onclick="App.toggleSettings()"></div>
     <div class="settings-modal">
-        <h3 style="margin-top:0">Appearance</h3>
+        <h3 style="margin-top:0">Personalization / 个性化</h3>
         
         <div class="s-group">
-            <label class="s-label">Background / 背景 (Real-time)</label>
-            <input id="s-bg-url" placeholder="https://..." style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--b);color:var(--t);border-radius:4px;box-sizing:border-box;margin-bottom:5px" oninput="App.previewStyle()">
+            <label class="s-label">Theme Preset / 预设主题</label>
+            <select id="s-preset" onchange="App.applyPreset(this.value)">
+                <option value="custom">Custom / 自定义</option>
+                <option value="default">Default Green / 默认绿</option>
+                <option value="ocean">Ocean Blue / 海洋蓝</option>
+                <option value="purple">Neon Purple / 霓虹紫</option>
+                <option value="orange">Sunset Gold / 落日金</option>
+            </select>
+        </div>
+        
+        <div class="switch-row">
+            <span class="s-label" style="margin:0">Background Image / 背景图片 <span style="font-weight:normal;color:var(--e)">(Required for Blur)</span></span>
+            <label class="switch"><input type="checkbox" id="sw-bg" onchange="App.toggleSection('bg')"><span class="slider"></span></label>
+        </div>
+        <div id="sec-bg" class="s-section">
+            <input id="s-bg-url" placeholder="Image URL (https://...)" style="margin-bottom:5px" oninput="App.previewStyle()">
             <div style="display:flex;gap:10px">
                  <input type="file" id="s-bg-file" accept="image/*" style="font-size:12px;color:var(--ts);flex:1">
-                 <button onclick="App.clearBackground()" class="btn" style="background:#ef4444;color:#fff;padding:4px 8px;font-size:12px;border-radius:4px">Reset</button>
+                 <button onclick="App.clearBackground()" class="btn" style="background:#ef4444;color:#fff;padding:4px 8px;font-size:12px;border-radius:4px">Clear</button>
             </div>
         </div>
 
-        <hr>
-
-        <div class="s-group">
-            <label class="s-label">Panel Opacity / 面板透明度: <span id="s-opacity-val">0.9</span></label>
-            <input type="range" id="s-opacity" min="0.1" max="1" step="0.05" value="0.9" oninput="App.previewStyle()">
+        <div class="switch-row">
+            <span class="s-label" style="margin:0">UI Style / 界面风格</span>
+            <label class="switch"><input type="checkbox" id="sw-ui" onchange="App.toggleSection('ui')"><span class="slider"></span></label>
         </div>
-        <div class="s-group">
-            <label class="s-label">Glass Blur / 毛玻璃: <span id="s-blur-val">0px</span></label>
-            <input type="range" id="s-blur" min="0" max="20" step="1" value="0" oninput="App.previewStyle()">
+        <div id="sec-ui" class="s-section">
+            <div class="s-group color-picker-wrapper">
+                <label class="s-label" style="margin:0;flex:1">Accent Color / 主题色</label>
+                <input type="color" id="s-accent" value="#22c55e" oninput="App.previewStyle()">
+            </div>
+            <div class="s-group" style="margin-bottom:0">
+                <label class="s-label">Border Radius / 圆角: <span id="s-radius-val">8px</span></label>
+                <input type="range" id="s-radius" min="0" max="20" step="1" value="8" oninput="App.previewStyle()">
+            </div>
+        </div>
+
+        <div class="switch-row">
+            <span class="s-label" style="margin:0">Glass Effect / 毛玻璃特效</span>
+            <label class="switch"><input type="checkbox" id="sw-glass" onchange="App.toggleSection('glass')"><span class="slider"></span></label>
+        </div>
+        <div id="sec-glass" class="s-section">
+            <div class="s-group">
+                <label class="s-label">Opacity / 透明度: <span id="s-opacity-val">0.9</span></label>
+                <input type="range" id="s-opacity" min="0.1" max="1" step="0.05" value="0.9" oninput="App.previewStyle()">
+            </div>
+            <div class="s-group" style="margin-bottom:0">
+                <label class="s-label">Blur Radius / 模糊程度: <span id="s-blur-val">0px</span></label>
+                <input type="range" id="s-blur" min="0" max="20" step="1" value="0" oninput="App.previewStyle()">
+            </div>
         </div>
         
-        <div class="s-group">
-            <label class="s-label">BG Mask (Darken/Lighten) / 背景遮罩: <span id="s-mask-val">0</span></label>
-            <input type="range" id="s-mask" min="-0.8" max="0.8" step="0.1" value="0" oninput="App.previewStyle()">
-            <div style="font-size:10px;color:var(--ts);display:flex;justify-content:space-between"><span>Black</span><span>None</span><span>White</span></div>
+        <div class="switch-row">
+            <span class="s-label" style="margin:0">Background Mask / 背景遮罩</span>
+            <label class="switch"><input type="checkbox" id="sw-mask" onchange="App.toggleSection('mask')"><span class="slider"></span></label>
+        </div>
+        <div id="sec-mask" class="s-section">
+            <div class="s-group" style="margin-bottom:0">
+                <label class="s-label">Darken or Lighten: <span id="s-mask-val">0</span></label>
+                <input type="range" id="s-mask" min="-0.8" max="0.8" step="0.1" value="0" oninput="App.previewStyle()">
+                <div style="font-size:10px;color:var(--ts);display:flex;justify-content:space-between"><span>Black</span><span>None</span><span>White</span></div>
+            </div>
         </div>
 
-        <div class="s-group">
-            <label class="s-label">Text Color / 文字颜色</label>
-            <select id="s-text-theme" onchange="App.previewStyle()">
-                <option value="auto">Auto (Default)</option>
-                <option value="dark">Dark / 深色</option>
-                <option value="light">Light / 浅色</option>
-            </select>
+        <div class="switch-row">
+            <span class="s-label" style="margin:0">Text & Custom CSS / 字体与样式</span>
+            <label class="switch"><input type="checkbox" id="sw-text" onchange="App.toggleSection('text')"><span class="slider"></span></label>
         </div>
-        
-        <div class="s-group">
-            <label class="s-label">Text Shadow / 文字阴影</label>
-            <select id="s-text-shadow" onchange="App.previewStyle()">
-                <option value="none">None</option>
-                <option value="soft">Soft Shadow</option>
-                <option value="hard">Strong Outline</option>
-            </select>
+        <div id="sec-text" class="s-section">
+            <div class="s-group">
+                <label class="s-label">Text Color / 文字颜色</label>
+                <select id="s-text-theme" onchange="App.previewStyle()">
+                    <option value="auto">Auto (Default)</option>
+                    <option value="dark">Dark / 深色</option>
+                    <option value="light">Light / 浅色</option>
+                </select>
+            </div>
+            <div class="s-group" style="margin-bottom:0">
+                <label class="s-label">Custom CSS</label>
+                <textarea id="s-css" placeholder="body { ... }" rows="3" style="width:100%;padding:8px;font-family:monospace;margin-top:5px" oninput="App.previewStyle()"></textarea>
+            </div>
         </div>
 
-        <div class="s-group">
-            <label class="s-label">Custom CSS</label>
-            <textarea id="s-css" placeholder="body { ... }" rows="3" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--b);color:var(--t);border-radius:4px;box-sizing:border-box;font-family:monospace" oninput="App.previewStyle()"></textarea>
-        </div>
-        <div style="text-align:right">
-            <button onclick="App.saveSettings()" class="btn btn-p" style="padding:8px 20px">Save</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;border-top:1px solid var(--b);padding-top:15px">
+            <button onclick="App.resetAppearance()" class="btn" style="background:transparent;color:var(--ts);font-size:12px;border:1px dashed var(--ts)">Default / 恢复</button>
+            <button onclick="App.saveSettings()" class="btn btn-p" style="padding:8px 24px">Save</button>
         </div>
     </div>
 
@@ -502,6 +539,13 @@ ${this.getHead("Admin")}
         const API={req:async(d)=>{const r=await fetch('/admin',{method:'POST',body:JSON.stringify(d)});if(r.status===401)location.reload();return r.json()}};
         const Icons = {
             eye: '${icons.eye}', eyeOff: '${icons.eyeOff}', trash: '${icons.trash}', copy: '${icons.copy}', lock: '${icons.lock}'
+        };
+
+        const PRESETS = {
+            default: { color: '#22c55e', bg: '', radius: 8 },
+            ocean: { color: '#06b6d4', bg: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=80', radius: 12 },
+            purple: { color: '#d946ef', bg: 'https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=1920&q=80', radius: 4 },
+            orange: { color: '#f59e0b', bg: 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?auto=format&fit=crop&w=1920&q=80', radius: 20 }
         };
 
         const TEXTS = {
@@ -548,7 +592,6 @@ ${this.getHead("Admin")}
                 const cfg = await API.req({action:'loadConfig'});
                 if(cfg) {
                     this.config = cfg;
-                    // [V16.6] Apply on init
                     this.applyConfig(this.config);
                 }
 
@@ -561,9 +604,23 @@ ${this.getHead("Admin")}
                 const show = d === 'block' ? 'none' : 'block';
                 $('.settings-modal').style.display = show;
                 $('.settings-overlay').style.display = show;
+                
                 if(show === 'block') {
-                    // Pre-fill values
                     const c = this.config;
+                    
+                    const hasBg = !!(c.bgUrl || c.bgImage);
+                    const hasGlass = (c.panelOpacity !== undefined && c.panelOpacity < 1) || (c.panelBlur !== undefined && c.panelBlur > 0);
+                    const hasMask = (c.bgMask !== undefined && c.bgMask !== 0);
+                    const hasText = !!(c.customCss || (c.textTheme && c.textTheme !== 'auto'));
+                    // Check if UI custom exists
+                    const hasUi = !!(c.accentColor || c.borderRadius !== undefined);
+
+                    $('#sw-bg').checked = hasBg;
+                    $('#sw-glass').checked = hasGlass;
+                    $('#sw-mask').checked = hasMask;
+                    $('#sw-text').checked = hasText;
+                    $('#sw-ui').checked = hasUi;
+
                     $('#s-bg-url').value = c.bgUrl || '';
                     $('#s-css').value = c.customCss || '';
                     
@@ -577,33 +634,98 @@ ${this.getHead("Admin")}
                     $('#s-mask-val').innerText = $('#s-mask').value;
 
                     $('#s-text-theme').value = c.textTheme || 'auto';
-                    $('#s-text-shadow').value = c.textShadow || 'none';
+                    
+                    // New UI values
+                    $('#s-accent').value = c.accentColor || '#22c55e';
+                    $('#s-radius').value = c.borderRadius !== undefined ? c.borderRadius : 8;
+                    $('#s-radius-val').innerText = $('#s-radius').value + 'px';
+
+                    this.toggleSection('bg', true);
+                    this.toggleSection('glass', true);
+                    this.toggleSection('mask', true);
+                    this.toggleSection('text', true);
+                    this.toggleSection('ui', true);
                 }
             },
 
-            // [V16.6] Real-time Preview: Reads inputs directly
+            toggleSection(id, noPreview) {
+                const checked = $('#sw-' + id).checked;
+                const el = $('#sec-' + id);
+                if(checked) {
+                    el.classList.add('active');
+                    // Defaults
+                    if(id === 'glass' && !noPreview) {
+                        if($('#s-opacity').value == 1) $('#s-opacity').value = 0.8; 
+                        if($('#s-blur').value == 0) $('#s-blur').value = 10;
+                    }
+                } else {
+                    el.classList.remove('active');
+                }
+                if(!noPreview) this.previewStyle();
+            },
+
+            applyPreset(name) {
+                if (name === 'custom') return;
+                const p = PRESETS[name];
+                if (!p) return;
+
+                // Update UI Controls
+                $('#sw-ui').checked = true;
+                this.toggleSection('ui', true);
+                $('#s-accent').value = p.color;
+                $('#s-radius').value = p.radius;
+                $('#s-radius-val').innerText = p.radius + 'px';
+
+                if (p.bg) {
+                    $('#sw-bg').checked = true;
+                    this.toggleSection('bg', true);
+                    $('#s-bg-url').value = p.bg;
+                    // Reset file input if switching presets
+                    $('#s-bg-file').value = '';
+                } else if (name === 'default') {
+                    // Default clears background
+                    $('#sw-bg').checked = false;
+                    this.toggleSection('bg', true);
+                }
+
+                this.previewStyle();
+            },
+
             previewStyle() {
+                const useBg = $('#sw-bg').checked;
+                const useGlass = $('#sw-glass').checked;
+                const useMask = $('#sw-mask').checked;
+                const useText = $('#sw-text').checked;
+                const useUi = $('#sw-ui').checked;
+
                 const tempConfig = {
-                    bgUrl: $('#s-bg-url').value,
-                    // Note: file preview is hard without re-reading, we rely on existing bgImage for preview unless saved
-                    bgImage: this.config.bgImage, 
-                    customCss: $('#s-css').value,
-                    panelOpacity: $('#s-opacity').value,
-                    panelBlur: $('#s-blur').value,
-                    bgMask: $('#s-mask').value,
-                    textTheme: $('#s-text-theme').value,
-                    textShadow: $('#s-text-shadow').value
+                    bgUrl: useBg ? $('#s-bg-url').value : null,
+                    bgImage: useBg ? (this.config.bgImage || null) : null, // Keep existing image if no file change
+                    
+                    panelOpacity: useGlass ? $('#s-opacity').value : 1,
+                    panelBlur: useGlass ? $('#s-blur').value : 0,
+                    
+                    bgMask: useMask ? $('#s-mask').value : 0,
+                    
+                    customCss: useText ? $('#s-css').value : null,
+                    textTheme: useText ? $('#s-text-theme').value : 'auto',
+                    
+                    accentColor: useUi ? $('#s-accent').value : '#22c55e',
+                    borderRadius: useUi ? $('#s-radius').value : 8
                 };
                 
-                // Update text indicators
+                // Update labels
                 $('#s-opacity-val').innerText = tempConfig.panelOpacity;
                 $('#s-blur-val').innerText = tempConfig.panelBlur + 'px';
                 $('#s-mask-val').innerText = tempConfig.bgMask;
+                $('#s-radius-val').innerText = tempConfig.borderRadius + 'px';
+                
+                // If user selected a file now, we can't preview it easily without FileReader logic duplicated.
+                // For simplicity in preview, we rely on URL or already saved image.
 
                 this.applyConfig(tempConfig);
             },
 
-            // [V16.6] Central Style Applicator
             applyConfig(c) {
                 let css = '';
                 
@@ -611,13 +733,16 @@ ${this.getHead("Admin")}
                 if (c.bgUrl || c.bgImage) {
                      let bg = c.bgImage || c.bgUrl;
                      css += \`body { background: url('\${bg}') no-repeat center center fixed; background-size: cover; }\`;
+                } else {
+                    css += \`body { background: var(--bg); }\`;
                 }
                 
-                // 2. CSS Variables
-                const op = c.panelOpacity !== undefined ? c.panelOpacity : 0.9;
+                // 2. Variables
+                const op = c.panelOpacity !== undefined ? c.panelOpacity : 1; 
                 const bl = c.panelBlur !== undefined ? c.panelBlur : 0;
+                const rad = c.borderRadius !== undefined ? c.borderRadius : 8;
+                const acc = c.accentColor || '#22c55e';
                 
-                // Mask Logic: Negative = Dark (rgba(0,0,0,x)), Positive = Light (rgba(255,255,255,x))
                 let maskVal = c.bgMask !== undefined ? parseFloat(c.bgMask) : 0;
                 let maskColor = '0,0,0';
                 if(maskVal > 0) maskColor = '255,255,255';
@@ -626,19 +751,25 @@ ${this.getHead("Admin")}
                 document.documentElement.style.setProperty('--bg-op', op);
                 document.documentElement.style.setProperty('--blur', bl + 'px');
                 document.documentElement.style.setProperty('--mask', \`rgba(\${maskColor}, \${maskAlpha})\`);
+                document.documentElement.style.setProperty('--radius', rad + 'px');
+                document.documentElement.style.setProperty('--a', acc);
+                
+                // Calculate RGB for transparency support
+                // Simple hex to rgb
+                const hex = acc.replace('#','');
+                if(hex.length === 6) {
+                    const r = parseInt(hex.substring(0,2), 16);
+                    const g = parseInt(hex.substring(2,4), 16);
+                    const b = parseInt(hex.substring(4,6), 16);
+                    document.documentElement.style.setProperty('--a-rgb', \`\${r},\${g},\${b}\`);
+                }
 
-                // 3. Text Shadow
-                let shadow = 'none';
-                if(c.textShadow === 'soft') shadow = '0 1px 2px rgba(0,0,0,0.5)';
-                if(c.textShadow === 'hard') shadow = '1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000';
-                document.documentElement.style.setProperty('--shadow', shadow);
-
-                // 4. Text Theme Class
+                // 3. Text Theme
                 document.documentElement.classList.remove('text-dark', 'text-light');
                 if (c.textTheme === 'dark') document.documentElement.classList.add('text-dark');
                 if (c.textTheme === 'light') document.documentElement.classList.add('text-light');
 
-                // 5. Custom CSS
+                // 4. Custom CSS
                 if (c.customCss) css += c.customCss;
                 
                 let style = $('#custom-style');
@@ -651,29 +782,37 @@ ${this.getHead("Admin")}
             },
 
             async clearBackground() {
-                if(!confirm("Reset Background?")) return;
-                const newConfig = { ...this.config, bgUrl: null, bgImage: null };
-                await API.req({ action: 'saveConfig', config: newConfig });
-                this.config = newConfig;
+                if(!confirm("Clear Background Image?")) return;
+                this.config.bgImage = null;
+                this.config.bgUrl = null;
                 $('#s-bg-url').value = '';
                 $('#s-bg-file').value = '';
+                this.previewStyle();
+            },
+
+            async resetAppearance() {
+                if(!confirm("Reset all appearance settings?")) return;
+                const newConfig = { 
+                    bgUrl: null, bgImage: null, customCss: null,
+                    panelOpacity: 1, panelBlur: 0, bgMask: 0,
+                    textTheme: 'auto', accentColor: '#22c55e', borderRadius: 8
+                };
+                await API.req({ action: 'saveConfig', config: newConfig });
                 location.reload();
             },
 
             async saveSettings() {
-                // Collect values
+                const useBg = $('#sw-bg').checked;
+                const useGlass = $('#sw-glass').checked;
+                const useMask = $('#sw-mask').checked;
+                const useText = $('#sw-text').checked;
+                const useUi = $('#sw-ui').checked;
+
                 const bgUrl = $('#s-bg-url').value;
-                const css = $('#s-css').value;
                 const file = $('#s-bg-file').files[0];
-                const opacity = $('#s-opacity').value;
-                const blur = $('#s-blur').value;
-                const mask = $('#s-mask').value;
-                const textTheme = $('#s-text-theme').value;
-                const textShadow = $('#s-text-shadow').value;
-                
                 let bgImage = this.config.bgImage;
-                
-                if (file) {
+
+                if (useBg && file) {
                     if (!file.type.startsWith('image/')) return alert('Images only');
                     if (file.size > 2 * 1024 * 1024) return alert('Max size 2MB');
                     bgImage = await new Promise(r => {
@@ -681,17 +820,24 @@ ${this.getHead("Admin")}
                         reader.onload = e => r(e.target.result);
                         reader.readAsDataURL(file);
                     });
-                } else if (bgUrl) {
+                } else if (!useBg) {
                     bgImage = null;
                 }
 
                 const newConfig = { 
-                    bgUrl, bgImage, customCss: css, 
-                    panelOpacity: opacity, 
-                    panelBlur: blur,
-                    bgMask: mask,
-                    textTheme: textTheme,
-                    textShadow: textShadow
+                    bgUrl: useBg ? bgUrl : null, 
+                    bgImage: useBg ? bgImage : null, 
+                    
+                    panelOpacity: useGlass ? $('#s-opacity').value : 1, 
+                    panelBlur: useGlass ? $('#s-blur').value : 0,
+                    
+                    bgMask: useMask ? $('#s-mask').value : 0,
+                    
+                    textTheme: useText ? $('#s-text-theme').value : 'auto',
+                    customCss: useText ? $('#s-css').value : null,
+                    
+                    accentColor: useUi ? $('#s-accent').value : '#22c55e',
+                    borderRadius: useUi ? $('#s-radius').value : 8
                 };
                 
                 await API.req({ action: 'saveConfig', config: newConfig });
@@ -876,7 +1022,7 @@ ${this.getHead("Admin")}
             async export(){
                 const a=document.createElement('a');
                 a.href=URL.createObjectURL(new Blob([JSON.stringify(this.nodes)],{type:'json'}));
-                a.download='nodes_v16.6.json';
+                a.download='nodes_v16.8.json';
                 a.click();
             },
 
