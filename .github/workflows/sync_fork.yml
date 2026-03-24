@@ -1,50 +1,81 @@
 name: Fork Sync
 
 permissions:
-    contents: write
+  contents: write
 
 on:
-    schedule:
-        - cron: "0 0 * * *"  # 每天午夜执行自动同步
-    workflow_dispatch:  # 允许在 GitHub Actions 页面手动触发
+  schedule:
+    - cron: "0 0 * * *"  # 每天午夜执行自动同步
+  workflow_dispatch:
 
-# 新增这一段：强制所有 JS Actions 使用 Node.js 24 运行，消除警告
+# 强制所有 JS Actions 使用 Node.js 24 运行，减少旧版警告
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-    sync_with_upstream:
-        name: Sync with Upstream
-        runs-on: ubuntu-latest
-        if: ${{ github.event.repository.fork }}
+  sync_with_upstream:
+    name: Sync with Upstream
+    runs-on: ubuntu-latest
+    if: ${{ github.event.repository.fork }}
 
-        steps:
-            - name: Checkout target repo
-              # 这里从 v4 升级到了 v6
-              uses: actions/checkout@v6
-              with:
-                token: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-            - name: Sync Upstream
-              # 这里我帮你升到了这个插件最新的小版本 v3.4.1
-              uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
-              with:
-                  target_repo_token: ${{ secrets.GITHUB_TOKEN }}
-                  upstream_sync_repo: axuitomo/CF-EMBY-PROXY-UI
-                  upstream_sync_branch: main
-                  target_sync_branch: main
-                  test_mode: false
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-            - name: Check for new commits
-              if: success()
-              run: echo "Sync completed successfully"
+      - name: Add upstream remote
+        run: |
+          git remote remove upstream || true
+          git remote add upstream https://github.com/axuitomo/CF-EMBY-PROXY-UI.git
+          git fetch upstream main
 
-            - name: Check for Failure
-              if: failure()
-              run: |
-                  echo "[Error] Sync failed. This might be due to:"
-                  echo "1. Changes in the upstream workflow file"
-                  echo "2. Merge conflicts that need manual resolution"
-                  echo "3. Network issues"
-                  echo "Please check the logs and consider manual sync if needed."
-                  exit 1
+      - name: Merge upstream and keep local wrangler.toml
+        run: |
+          set -e
+          git checkout main
+          git merge --no-commit --no-ff upstream/main || true
+
+          if git diff --name-only --diff-filter=U | grep -qx 'worker.js'; then
+            git checkout --theirs worker.js
+            git add worker.js
+          fi
+
+          if git diff --name-only --diff-filter=U | grep -qx 'wrangler.toml'; then
+            git checkout --ours wrangler.toml
+            git add wrangler.toml
+          fi
+
+          if git diff --name-only --diff-filter=U | grep -q .; then
+            echo "[Error] Remaining unresolved conflicts:"
+            git diff --name-only --diff-filter=U
+            exit 1
+          fi
+
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Sync upstream (keep local wrangler.toml)"
+            git push origin main
+          fi
+
+      - name: Check for new commits
+        if: success()
+        run: echo "Sync completed successfully"
+
+      - name: Check for Failure
+        if: failure()
+        run: |
+          echo "[Error] Sync failed. This might be due to:"
+          echo "1. Merge conflicts in files other than worker.js / wrangler.toml"
+          echo "2. Upstream workflow or history changes"
+          echo "3. Network or permission issues"
+          echo "Please check the logs and consider manual sync if needed."
+          exit 1
