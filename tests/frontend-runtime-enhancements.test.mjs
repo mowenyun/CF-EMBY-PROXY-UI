@@ -61,6 +61,28 @@ test('admin runtime enhancement observes lazily mounted logs view', () => {
   assert.match(ADMIN_RUNTIME_ENHANCEMENT_SCRIPT, /shellHookSelector = '[^']*#view-logs/);
 });
 
+test('config save enhancement adds an idempotency token', async () => {
+  const { patchSafetyContractMethods } = loadEnhancementTestHooks();
+  const requests = [];
+  const messages = [];
+  const app = {
+    async apiCall(action, payload) {
+      requests.push({ action, payload });
+      return { success: true };
+    },
+    showMessage(message, options) {
+      messages.push({ message, options });
+    }
+  };
+  patchSafetyContractMethods(app);
+
+  await app.apiCall('getSettingsBootstrap');
+  await app.apiCall('saveConfig', { config: { rateLimitRpm: 20 } });
+
+  assert.match(requests[1].payload.mutationId, /^cfg-/);
+  assert.equal(messages.length, 0);
+});
+
 test('host-prefix node links follow the effective runtime mode and strict hostname', async () => {
   const { normalizeHostPrefixDnsHostname, patchSafetyContractMethods } = loadEnhancementTestHooks({}, {
     location: { origin: 'https://proxy.example' }
@@ -291,10 +313,14 @@ test('a stale monthly traffic fallback stays visible but remains retryable', asy
 
 test('backup view exposes only the paired Worker and HTML upload flow', async () => {
   const template = await readFile(new URL('../frontend/admin-runtime.template.html', import.meta.url), 'utf8');
+  const generatedIndex = await readFile(new URL('../frontend/index.html', import.meta.url), 'utf8');
   const cdnChecker = await readFile(new URL('../frontend/scripts/check-cdn-paths.mjs', import.meta.url), 'utf8');
   const vueRuntimeConfig = await readFile(new URL('../frontend/src/config/runtime.js', import.meta.url), 'utf8');
   const vueAdminConsole = await readFile(new URL('../frontend/src/composables/useAdminConsole.js', import.meta.url), 'utf8');
   assert.match(template, /id:"admin-worker-html-update-root"/);
+  assert.match(generatedIndex, /_createCommentVNode\("config snapshots removed",!0\),App\.isSettingsExpertMode/);
+  assert.doesNotMatch(generatedIndex, /\]\),null,App\.isSettingsExpertMode/);
+  assert.doesNotMatch(generatedIndex, /configSnapshots|cfg-snapshots-list/);
   assert.doesNotMatch(template, /cfg-release-repo|cfg-release-branch|cfg-release-tag|cfg-index-url/);
   assert.doesNotMatch(template, /releaseRepo|releaseBranch|releaseTag|buildGithubReleaseSourceState/);
   assert.doesNotMatch(template, /updateWorkerScriptContent|从 GitHub 拉取并更新 Worker/);

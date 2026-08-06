@@ -1,11 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { DatabaseSync } from "node:sqlite";
+import { Miniflare } from "miniflare";
 
 import { createTestApplication } from "../worker/testing/hooks.js";
 
 const { testPlatform, workerHandler } = createTestApplication();
 const kernel = testPlatform.d1;
+const logger = testPlatform.fetch.logger;
+const adminActions = testPlatform.fetch.adminActions;
 
 const CURRENT_TABLES = [
   "d1_schema_meta",
@@ -43,14 +46,17 @@ function createD1Adapter(database, options = {}) {
           return prepared;
         },
         async run() {
+          if (options.queryCounter) options.queryCounter.count += 1;
           events.push({ type: "run", sql: sqlText });
           if (typeof options.failRun === "function") options.failRun(sqlText, events);
           return database.prepare(sqlText).run(...bindings);
         },
         async all() {
+          if (options.queryCounter) options.queryCounter.count += 1;
           return { results: database.prepare(sqlText).all(...bindings) };
         },
         async first() {
+          if (options.queryCounter) options.queryCounter.count += 1;
           return database.prepare(sqlText).get(...bindings) || null;
         }
       };
@@ -187,6 +193,16 @@ test("repeated current-schema initialization is idempotent", async () => {
     assert.deepEqual([...getTableNames(database)].sort(), tablesAfterFirst);
     assert.deepEqual(second.createdTables, []);
   });
+});
+
+test("runtime config persistence is KV-only", async () => {
+  const kv = createKv();
+  await kv.put(kernel.CONFIG_KEY, JSON.stringify({ rateLimitRpm: 12 }));
+  const env = { ENI_KV: kv };
+
+  const saved = await kernel.persistRuntimeConfig({ rateLimitRpm: 20 }, { env, kv });
+  assert.equal(saved.rateLimitRpm, 20);
+  assert.equal((await kv.get(kernel.CONFIG_KEY, { type: "json" })).rateLimitRpm, 20);
 });
 
 test("a true affinity conflict fails before schema writes", async () => {
@@ -445,7 +461,7 @@ test("destructive proxy log recreation rolls back the whole batch on failure", a
   });
 });
 
-test("schema metadata attestation accelerates only unchanged verified schemas", async () => {
+test("schema metadata attestation trusts only unchanged verified schemas", async () => {
   await withDatabase(async (database, db) => {
     const env = { JWT_SECRET: "schema-attestation-secret" };
     const initialized = await kernel.initializeD1Database(db, { includeFts: true, env });
@@ -825,6 +841,223 @@ test("current logs, statistics, DNS, status, cache, lock, auth, and FTS structur
     assert.equal(database.prepare("SELECT COUNT(*) AS count FROM proxy_logs_fts WHERE proxy_logs_fts MATCH 'alpha'").get().count, 1);
     assert.equal((await kernel.getD1SchemaStatus(db)).schemaReady, true);
   });
+});
+
+test("bulk DNS writes preserve all normalized rows", async () => {
+  await withDatabase(async (database, db) => {
+    await kernel.initializeD1Database(db, { includeFts: true });
+    const items = Array.from({ length: 250 }, (_, index) => ({
+      id: `item-${index}`,
+      ip: `10.0.${Math.floor(index / 250)}.${index % 250 + 1}`,
+      sourceKind: "manual",
+      sourceLabel: "bulk"
+    }));
+    const sources = Array.from({ length: 250 }, (_, index) => ({
+      id: `source-${index}`,
+      name: `Source ${index}`,
+      url: `https://example.test/${index}.txt`,
+      sourceType: "url",
+      sourceKind: "custom",
+      enabled: true,
+      sortOrder: index,
+      ipLimit: 5
+    }));
+
+    await kernel.upsertDnsIpPoolItems(db, items);
+    await kernel.persistDnsIpPoolSources({ db }, sources);
+
+    assert.equal(database.prepare("SELECT COUNT(*) AS total FROM dns_ip_pool_items").get().total, 250);
+    assert.equal(database.prepare("SELECT COUNT(*) AS total FROM dns_ip_pool_sources").get().total, 250);
+  });
+});
+
+test("D1 free-plan query budgets cover initialization, scheduled tidy, log flush, and DNS deletion", async () => {
+  const queryCounter = { count: 0 };
+  await withDatabase(async (database, db) => {
+    const env = { DB: db, JWT_SECRET: "d1-query-budget-test" };
+    const initialization = await kernel.initializeD1Database(db, { includeFts: true, env });
+    await kernel.bumpLogsRevision(db, { schemaReady: true, ftsReady: true, statsReady: true, categoryEnabled: true });
+    assert.equal(initialization.schemaReady, true);
+    assert.ok(queryCounter.count <= 50, `initialization used ${queryCounter.count} D1 queries`);
+
+    queryCounter.count = 0;
+    const scheduledTasks = [];
+    workerHandler.scheduled({ scheduledTime: Date.now() }, env, {
+      waitUntil(task) {
+        scheduledTasks.push(task);
+      }
+    });
+    assert.equal(scheduledTasks.length, 1);
+    await scheduledTasks[0];
+    assert.ok(queryCounter.count <= 50, `scheduled handler used ${queryCounter.count} D1 queries`);
+
+    queryCounter.count = 0;
+    await kernel.tidyD1Data(env, {
+      db,
+      mode: "scheduled",
+      maintenanceMode: "smart",
+      config: { logRetentionDays: 30, scheduleUtcOffsetMinutes: 480 },
+      scheduledNow: new Date()
+    });
+    assert.ok(queryCounter.count <= 50, `scheduled tidy used ${queryCounter.count} D1 queries`);
+
+    queryCounter.count = 0;
+    const runtimeConfig = {
+      logEnabled: true,
+      logWriteMode: "all",
+      logFlushCountThreshold: 1000,
+      logWriteDelayMinutes: 1000,
+      logBatchChunkSize: 50,
+      logBatchRetryCount: 0
+    };
+    for (let index = 0; index < 50; index += 1) logger.record(env, { waitUntil() {} }, {
+      runtimeConfig,
+      requestMethod: "GET",
+      requestPath: `/api/${index}`,
+      statusCode: 200,
+      category: "api"
+    });
+    await logger.flush(env);
+    assert.equal(database.prepare("SELECT COUNT(*) AS total FROM proxy_logs").get().total, 50);
+    assert.ok(queryCounter.count <= 50, `50-row log flush used ${queryCounter.count} D1 queries`);
+
+    await kernel.upsertDnsIpPoolItems(db, Array.from({ length: 250 }, (_, index) => ({
+      ip: `10.2.0.${index + 1}`,
+      sourceKind: "manual"
+    })));
+    queryCounter.count = 0;
+    const deletedCount = await kernel.deleteDnsIpPoolItems(db, Array.from({ length: 250 }, (_, index) => `10.2.0.${index + 1}`));
+    assert.equal(deletedCount, 250);
+    assert.equal(database.prepare("SELECT COUNT(*) AS total FROM dns_ip_pool_items").get().total, 0);
+    assert.ok(queryCounter.count <= 50, `250-row DNS deletion used ${queryCounter.count} D1 queries`);
+
+    queryCounter.count = 0;
+    const probeEntries = await kernel.upsertDnsIpProbeCacheEntries(db, Array.from({ length: 250 }, (_, index) => ({
+      ip: `10.3.0.${index + 1}`,
+      entryColo: "LAX",
+      probeStatus: "ok",
+      expiresAt: Date.now() + 60_000
+    })));
+    assert.equal(probeEntries.length, 250);
+    assert.equal(database.prepare("SELECT COUNT(*) AS total FROM dns_ip_probe_cache").get().total, 250);
+    assert.ok(queryCounter.count <= 50, `250-row DNS probe cache write used ${queryCounter.count} D1 queries`);
+  }, { queryCounter });
+});
+
+test("schema readiness rejects write-breaking extra columns, unique indexes, and triggers", async () => {
+  await withDatabase(async (database, db) => {
+    database.exec("CREATE TABLE sys_status (scope TEXT PRIMARY KEY, payload TEXT NOT NULL, updated_at INTEGER NOT NULL, legacy_required TEXT NOT NULL)");
+    const status = await kernel.getD1SchemaStatus(db);
+    assert.equal(status.schemaReady, false);
+    assert.ok(status.issues.includes("unsupported_required_columns:sys_status:legacy_required"));
+  });
+
+  for (const fixture of [
+    ["CREATE UNIQUE INDEX legacy_unique_status_payload ON sys_status(payload)", "unsupported_unique_indexes:sys_status:legacy_unique_status_payload"],
+    ["CREATE TRIGGER legacy_block_status BEFORE INSERT ON sys_status BEGIN SELECT RAISE(ABORT, 'legacy blocked'); END", "unsupported_triggers:sys_status:legacy_block_status"]
+  ]) await withDatabase(async (database, db) => {
+    await kernel.initializeD1Database(db, { includeFts: true });
+    database.exec(fixture[0]);
+    const status = await kernel.getD1SchemaStatus(db);
+    assert.equal(status.schemaReady, false);
+    assert.ok(status.issues.includes(fixture[1]));
+    const plan = await kernel.buildD1SchemaRepairPlan(db);
+    assert.equal(plan.phase, "blocked");
+    assert.ok(plan.blockingIssues.includes(fixture[1]));
+  });
+});
+
+test("DNS persistence enforces D1 serialized value and row limits", async () => {
+  await withDatabase(async (_database, db) => {
+    await kernel.initializeD1Database(db, { includeFts: true });
+    await assert.rejects(
+      kernel.persistDnsIpPoolSources(db, [{ name: "x".repeat(1_900_000), url: "https://example.com/list.txt" }]),
+      error => error?.code === "D1_VALUE_TOO_LARGE" && error?.status === 400
+    );
+
+    const largeRemark = "x".repeat(1_000_000);
+    const cached = await kernel.upsertDnsIpPoolFetchCacheEntry(db, {
+      signature: "oversized-cache",
+      items: [{ ip: "203.0.113.1", remark: largeRemark }],
+      sourceResults: [{ id: "source", status: "success", items: [{ ip: "203.0.113.1", remark: largeRemark }] }]
+    });
+    assert.equal(cached, null);
+
+    const oversizedPayload = { value: "x".repeat(1_900_000) };
+    assert.equal(await kernel.putCfDashboardCacheEntry(db, {
+      cacheKey: "oversized-dashboard",
+      payload: { runtimeStatus: oversizedPayload }
+    }), null);
+    assert.equal(await kernel.putCfRuntimeCacheEntry(db, {
+      cacheKey: "oversized-runtime",
+      payload: oversizedPayload
+    }), null);
+    assert.equal(await kernel.putOpsStatusPayloadToDb(db, "oversized-status", oversizedPayload), false);
+  });
+});
+
+test("LIKE log search rejects patterns above the D1 byte limit", async () => {
+  await withDatabase(async (_database, db) => {
+    await kernel.initializeD1Database(db, { includeFts: true });
+    const response = await adminActions.getLogs({
+      filters: { keyword: "x".repeat(60), searchMode: "like" }
+    }, { db, env: { DB: db }, kv: null });
+    assert.equal(response.status, 400);
+    const body = await response.json();
+    assert.equal(body.error.code, "LOG_QUERY_KEYWORD_TOO_LONG");
+  });
+});
+
+test("current schema initializes against the workerd D1 API", { timeout: 30_000 }, async () => {
+  const miniflare = new Miniflare({
+    modules: true,
+    script: "export default { fetch() { return new Response('ok'); } }",
+    compatibilityDate: "2026-03-13",
+    d1Databases: ["DB"]
+  });
+  try {
+    const db = await miniflare.getD1Database("DB");
+    const env = { DB: db, JWT_SECRET: "workerd-d1-schema-test-secret" };
+    const initialized = await kernel.initializeD1Database(db, { includeFts: true, env });
+    const repeated = await kernel.initializeD1Database(db, { includeFts: true, env });
+    await kernel.upsertDnsIpPoolItems(db, Array.from({ length: 120 }, (_, index) => ({
+      id: `item-${index}`,
+      ip: `10.1.${Math.floor(index / 250)}.${index % 250 + 1}`,
+      sourceKind: "manual",
+      sourceLabel: "workerd"
+    })));
+    await kernel.persistDnsIpPoolSources({ db }, Array.from({ length: 120 }, (_, index) => ({
+      id: `source-${index}`,
+      name: `Source ${index}`,
+      url: `https://example.test/${index}.txt`,
+      sourceType: "url",
+      sourceKind: "custom",
+      enabled: true,
+      sortOrder: index,
+      ipLimit: 5
+    })));
+    await kernel.upsertDnsIpProbeCacheEntries(db, Array.from({ length: 120 }, (_, index) => ({
+      ip: `10.4.0.${index + 1}`,
+      entryColo: "LAX",
+      probeStatus: "ok",
+      expiresAt: Date.now() + 60_000
+    })));
+    const runtimeConfig = { logEnabled: true, logWriteMode: "all", logFlushCountThreshold: 1000, logWriteDelayMinutes: 1000, logBatchChunkSize: 50, logBatchRetryCount: 0 };
+    for (let index = 0; index < 2; index += 1) logger.record(env, { waitUntil() {} }, { runtimeConfig, requestMethod: "GET", requestPath: `/api/${index}`, statusCode: 200, category: "api" });
+    await logger.flush(env);
+    assert.equal(await kernel.optimizeLogsDb(db), true);
+
+    assert.equal(initialized.completed, true);
+    assert.equal(repeated.phase, "ready");
+    assert.equal((await kernel.getD1SchemaStatus(db)).schemaReady, true);
+    assert.equal((await db.prepare("SELECT COUNT(*) AS total FROM dns_ip_pool_items").first()).total, 120);
+    assert.equal((await db.prepare("SELECT COUNT(*) AS total FROM dns_ip_pool_sources").first()).total, 120);
+    assert.equal((await db.prepare("SELECT COUNT(*) AS total FROM dns_ip_probe_cache").first()).total, 120);
+    assert.equal((await db.prepare("SELECT COUNT(*) AS total FROM proxy_logs").first()).total, 2);
+    assert.equal((await db.prepare("SELECT SUM(request_count) AS total FROM proxy_stats_hourly").first()).total, 2);
+  } finally {
+    await miniflare.dispose();
+  }
 });
 
 test("scheduled D1 tidy operates on the current schema", async () => {

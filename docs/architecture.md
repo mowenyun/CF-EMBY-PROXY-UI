@@ -91,11 +91,11 @@ frontend/admin-runtime.template.html
 
 ### KV
 
-KV 用于运行时配置、节点实体与索引、配置快照、DNS 历史、远端/本地管理端 HTML 记录，以及与缓存/整理相关的元数据。KV 写入通过 mutation chain、revision 和回滚逻辑保护；管理端配置保存和导入不能绕过这些服务。
+KV 用于运行时配置、节点实体与索引、DNS 历史、远端/本地管理端 HTML 记录，以及与缓存/整理相关的元数据。全局设置以 `sys:theme` 为唯一事实来源，保存和 settings-only 导入始终写入 KV；D1 不参与设置读写，也不会让设置进入只读状态。KV 写入通过 mutation chain、revision 和回滚逻辑保护。
 
 ### D1
 
-D1 保存日志、统计聚合、DNS/IP 工作区数据、运行状态、缓存/锁、认证失败和 FTS 结构。`initLogsDb` 是当前统一 schema 初始化动作；D1 整理必须先通过 schema readiness，再使用签名的预览 plan token 执行。
+D1 保存日志、统计聚合、DNS/IP 工作区数据、运行状态、缓存/锁、认证失败和 FTS 结构，不保存或投影全局设置。`initLogsDb` 是当前统一 schema 初始化动作；D1 整理必须先通过 schema readiness，再使用签名的预览 plan token 执行。
 
 ### Isolate 内存
 
